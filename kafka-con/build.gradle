@@ -1,0 +1,108 @@
+import com.github.davidmc24.gradle.plugin.avro.GenerateAvroJavaTask
+
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.1.2'
+    id 'io.spring.dependency-management' version '1.1.2'
+    id "com.github.davidmc24.gradle.plugin.avro-base" version "1.8.0"
+}
+
+group = 'com.cx'
+version = '0.0.1-SNAPSHOT'
+
+java {
+    sourceCompatibility = '17'
+}
+
+configurations {
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    // https://mvnrepository.com/artifact/org.apache.kafka/kafka-clients
+    implementation 'org.apache.kafka:kafka-clients:3.5.1'
+    implementation "org.apache.avro:avro:1.11.0"
+    implementation 'org.springframework.boot:spring-boot-starter-data-jdbc'
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    compileOnly 'org.projectlombok:lombok'
+    runtimeOnly 'org.postgresql:postgresql'
+    annotationProcessor 'org.projectlombok:lombok'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+}
+
+
+def generateAvro = tasks.register("generateAvro", GenerateAvroJavaTask) {
+    source("src/main/avro")
+    outputDir = file("src/main/java")
+}
+
+sourceSets {
+    main {
+        java {
+            srcDirs = ["src/main/java2", "src/main/java"]
+        }
+    }
+}
+
+tasks.named("compileJava").configure {
+    source(generateAvro)
+    //source(sourceSets.main.allJava)
+}
+
+tasks.register('count') {
+    doLast {
+        4.times { print "$it " }
+    }
+}
+
+tasks.register('list') {
+    Directory projectDirectory = layout.projectDirectory
+    onlyIf { true }
+    ext {
+        v = "1a"
+    }
+    doLast {
+        File srcDir
+
+        // Create a file collection using a closure
+        def collection = projectDirectory.files { srcDir.listFiles() }
+
+        srcDir = projectDirectory.file('src/main').asFile
+        println "Contents of $srcDir.name"
+        collection.collect { layout.projectDirectory.asFile.relativePath(it) }.sort().each { println it }
+
+    }
+}
+
+tasks.register('list2') {
+    dependsOn(':list')
+    dependsOn(':ee')
+    doLast {
+        println tasks.findByPath(':list').extensions.ext.v
+        if (tasks.findByPath(':ee').outputs.hasOutput) {
+            println tasks.findByPath(':ee').outputs.files.singleFile.text
+        }
+    }
+
+
+}
+
+tasks.register('ee', Exec) {
+    commandLine "ls", "-l"
+    outputs.file(layout.buildDirectory.files('aa.txt'))
+    doLast {
+
+        outputs.files.singleFile.text = "bbbccc"
+    }
+}
+
+
+tasks.named('test') {
+    useJUnitPlatform()
+}

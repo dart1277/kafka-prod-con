@@ -1,0 +1,31 @@
+{
+    "name": "AudioCommand",
+    "namespace": "com.cx.prod.kafkaprod.audio",
+    "type": "record",
+    "fields": [
+        {
+            "name": "command",
+            "type": "string"
+        },
+        {
+            "name": "level",
+            "type": ["null","string"],
+            "default": null
+
+        },
+        {
+            "name": "mode",
+            "type": ["null","string"],
+            "default": null
+        },
+        {
+            "name": "type",
+            "type": {
+                "type": "enum",
+                "name": "Type",
+                "symbols": ["REGULAR", "ADVANCED"]
+            },
+            "default": "REGULAR"
+        }
+    ]
+}
